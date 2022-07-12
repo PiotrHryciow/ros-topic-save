@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+
+<launch>
+
+
+    <arg name="ros_topic_camera_front" default="/camera/image_front/compressed"/>
+    <arg name="ros_topic_camera_left" default="/camera/image_left/compressed"/>
+    <arg name="ros_topic_camera_right" default="/camera/image_right/compressed"/>
+
+
+    <arg name="msg_type_camera_front" default="sensor_msgs/CompressedImage"/>
+    <arg name="msg_type_camera_left" default="sensor_msgs/CompressedImage"/>
+    <arg name="msg_type_camera_right" default="sensor_msgs/CompressedImage"/>
+
+
+    <arg name="frequency" default="1"/>
+
+    <arg name="path" default="/home/piotr/Desktop/images"/>
+
+
+    <node pkg="ros_image_saver" type="image_saver.py" name="image_saver">
+        <param name="~ros_topic_camera_front" value="$(arg ros_topic_camera_front)"/>
+        <param name="~ros_topic_camera_left" value="$(arg ros_topic_camera_left)"/>
+        <param name="~ros_topic_camera_right" value="$(arg ros_topic_camera_right)"/>
+
+
+        <param name="~msg_type_camera_front" value="$(arg msg_type_camera_front)"/>
+        <param name="~msg_type_camera_left" value="$(arg msg_type_camera_left)"/>
+        <param name="~msg_type_camera_right" value="$(arg msg_type_camera_right)"/>
+
+
+        <param name="~frequency" value="$(arg frequency)"/>
+        <param name="~path" value="$(arg path)"/>
+
+
+    </node>
+
+</launch>
