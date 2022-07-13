@@ -15,6 +15,9 @@
     <arg name="ros_topic_imu" default="/imu/raw_data"/>
     <arg name="msg_type_imu" default="sensor_msgs/Imu"/>
 
+    <arg name="ros_topic_point_cloud" default="/os_cloud_node/points"/>
+    <arg name="msg_type_point_cloud" default="sensor_msgs/PointCloud2"/>
+
     <arg name="frequency" default="1"/>
 
     <arg name="path" default="/home/piotr/Desktop/data"/>
@@ -32,6 +35,9 @@
 
         <param name="~ros_topic_imu" value="$(arg ros_topic_imu)"/>
         <param name="~msg_type_imu" value="$(arg msg_type_imu)"/>
+
+        <param name="~ros_topic_point_cloud" value="$(arg ros_topic_point_cloud)"/>
+        <param name="~msg_type_point_cloud" value="$(arg msg_type_point_cloud)"/>
 
         <param name="~frequency" value="$(arg frequency)"/>
 
