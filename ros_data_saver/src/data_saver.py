@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from re import L
 import rospy
 import cv2
 from cv_bridge import CvBridge, CvBridgeError
@@ -10,6 +9,9 @@ import csv
 from datetime import datetime
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import CompressedImage
+#open source library from :https://github.com/dimatura/pypcd
+from pypcd import pypcd
+
 
 class data_saver:
     def __init__(self):
@@ -24,18 +26,21 @@ class data_saver:
         self.ros_topic_camera_left = rospy.get_param("~ros_topic_camera_left", "test")
         self.ros_topic_camera_right = rospy.get_param("~ros_topic_camera_right", "test")
         self.ros_topic_imu = rospy.get_param("~ros_topic_imu", "test")
+        self.ros_topic_point_cloud = rospy.get_param("~ros_topic_point_cloud", "test")
 
         #importing each msg type
         self.msg_type_camera_front = rospy.get_param("~msg_type_camera_front", "std_msgs/String")
         self.msg_type_camera_left = rospy.get_param("~msg_type_camera_left", "std_msgs/String")
         self.msg_type_camera_right = rospy.get_param("~msg_type_camera_right", "std_msgs/String")
         self.msg_type_imu = rospy.get_param("~msg_type_imu", "std_msgs/String")
+        self.msg_type_point_cloud = rospy.get_param("~msg_type_point_cloud", "std_msgs/String")
 
         #converting msg type from string to actual type from ros topic
         self.msg_type_camera_front = self.import_msg_type(self.msg_type_camera_front)
         self.msg_type_camera_left = self.import_msg_type(self.msg_type_camera_left)
         self.msg_type_camera_right = self.import_msg_type(self.msg_type_camera_right)
         self.msg_type_imu = self.import_msg_type(self.msg_type_imu)
+        self.msg_type_point_cloud = self.import_msg_type(self.msg_type_point_cloud)
 
         #importing frequency of saving photos
         self.frequency = rospy.get_param("~frequency", "test")
@@ -46,6 +51,7 @@ class data_saver:
         self.path_camera_left = self.path + "/camera_left/left_{}.jpg"
         self.path_camera_right = self.path + "/camera_right/right_{}.jpg"
         self.path_imu = self.path + "/imu/imu_{}.csv"
+        self.path_point_cloud = self.path + "/point_cloud/point_cloud_{}.pcd"
         self.mkdirs()
 
         #initialize message_filters which enables to synchronize timings of incoming messages from various topics
@@ -53,14 +59,14 @@ class data_saver:
         self.camera_left = message_filters.Subscriber(self.ros_topic_camera_left, self.msg_type_camera_left)
         self.camera_right = message_filters.Subscriber(self.ros_topic_camera_right, self.msg_type_camera_right)
         self.imu = message_filters.Subscriber(self.ros_topic_imu, self.msg_type_imu)
+        self.point_cloud = message_filters.Subscriber(self.ros_topic_point_cloud, self.msg_type_point_cloud)
 
         ###################### second parameter is queue, third is allowed time difference between each topic ############################## 
-        self.synchronizer = message_filters.ApproximateTimeSynchronizer([self.camera_front, self.camera_left, self.camera_right, self.imu], 10, 0.1)
+        self.synchronizer = message_filters.ApproximateTimeSynchronizer([self.camera_front, self.camera_left, self.camera_right, self.imu, self.point_cloud], 100, 0.1)
         self.synchronizer.registerCallback(self.synchronize_callback)
 
         #end of initialization, goes to infinite loop, where it can recive callbacks  
         self.sleep()  
-
 
     def sleep(self):
         rate = rospy.Rate(self.frequency)
@@ -75,9 +81,12 @@ class data_saver:
         elif msg_type == "sensor_msgs/Imu":
             from sensor_msgs.msg import Imu
             subscriber_msg = Imu
+        elif msg_type == "sensor_msgs/PointCloud2":
+            from sensor_msgs.msg import PointCloud2
+            subscriber_msg = PointCloud2
         return subscriber_msg
 
-    def synchronize_callback(self, camera_front, camera_left, camera_right, imu):
+    def synchronize_callback(self, camera_front, camera_left, camera_right, imu, point_cloud):
         try:
             #for other image formats then rgb change second paramiter "bgr8"
             #checking what type of format is the image
@@ -102,6 +111,8 @@ class data_saver:
                         imu.angular_velocity.x, imu.angular_velocity.y, imu.angular_velocity.z,
                         imu.linear_acceleration.x, imu.linear_acceleration.y, imu.linear_acceleration.z]
             self.imu_writer.writerow(imu_list)
+            pc = pypcd.PointCloud.from_msg(point_cloud)
+            pc.save_pcd(self.path_point_cloud, compression='binary_compressed')
         except CvBridgeError as e:
             print(e)
 
@@ -112,6 +123,7 @@ class data_saver:
         path_camera_left = self.path + "/camera_left"
         path_camera_right = self.path + "/camera_right"
         path_imu = self.path + "/imu"
+        path_point_cloud = self.path + "/point_cloud"
         if not(os.path.isdir(path_camera_front)):
             os.mkdir(path_camera_front)
         if not(os.path.isdir(path_camera_left)):
@@ -126,6 +138,8 @@ class data_saver:
             self.imu_writer.writerow(['time', 'orientation x', 'orientation y', 'orientation z',
                                     "angular velocity x", "angular velocity y", "angular velocity z",
                                     "linear_acceleration x", "linear_acceleration y", "linear_acceleration z"])
+        if not(os.path.isdir(path_point_cloud)):
+            os.mkdir(path_point_cloud)
 
 
 if __name__ == '__main__':
