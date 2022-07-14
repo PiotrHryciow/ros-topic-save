@@ -18,6 +18,9 @@
     <arg name="ros_topic_point_cloud" default="/os_cloud_node/points"/>
     <arg name="msg_type_point_cloud" default="sensor_msgs/PointCloud2"/>
 
+    <arg name="ros_topic_cmd_vel" default="/turtle1/cmd_vel"/>
+    <arg name="msg_type_cmd_vel" default="geometry_msgs/Twist"/>
+
     <arg name="frequency" default="1"/>
 
     <arg name="path" default="/home/piotr/Desktop/data"/>
@@ -38,6 +41,9 @@
 
         <param name="~ros_topic_point_cloud" value="$(arg ros_topic_point_cloud)"/>
         <param name="~msg_type_point_cloud" value="$(arg msg_type_point_cloud)"/>
+
+        <param name="~ros_topic_cmd_vel" value="$(arg ros_topic_cmd_vel)"/>
+        <param name="~msg_type_cmd_vel" value="$(arg msg_type_cmd_vel)"/>
 
         <param name="~frequency" value="$(arg frequency)"/>
 
